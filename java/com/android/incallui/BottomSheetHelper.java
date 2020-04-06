@@ -33,6 +33,7 @@ import android.support.v4.os.UserManagerCompat;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -656,7 +657,7 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
 
    private boolean isAddParticipantSupported() {
      boolean showAddParticipant = mCall != null
-         && mCall.can(DialerCall.CAPABILITY_ADD_PARTICIPANT)
+         && mCall.can(android.telecom.Call.Details.CAPABILITY_ADD_PARTICIPANT)
          && UserManagerCompat.isUserUnlocked(mContext)
          && !mCall.hasReceivedVideoUpgradeRequest();
      if (QtiImsExtUtils.isCarrierConfigEnabled(getPhoneId(), mContext,
@@ -698,8 +699,15 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
    }
 
    private void startAddParticipantActivity() {
+     final InCallActivity inCallActivity = InCallPresenter.getInstance().getActivity();
+     if (inCallActivity == null || !inCallActivity.isVisible()) {
+         LogUtil.w("BottomSheetHelper.startAddParticipantActivity",
+               "In call activity is either null or not visible");
+         return;
+     }
      try {
-       mContext.startActivity(QtiCallUtils.getAddParticipantsIntent());
+       inCallActivity.startActivityForResult(QtiCallUtils.getAddParticipantsIntent(),
+               QtiCallUtils.REQUEST_ADD_PARTICIPANT);
      } catch (ActivityNotFoundException e) {
        LogUtil.e("BottomSheetHelper.startAddParticipantActivity",
            "Activity not found. Exception = " + e);

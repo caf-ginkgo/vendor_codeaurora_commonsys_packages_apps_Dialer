@@ -281,15 +281,26 @@ public class InCallActivity extends TransactionSafeFragmentActivity
     getWindow().setAttributes(lp);
   }
 
+  @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     Log.i("InCallActivity.onActivityResult", " requestCode = " + requestCode +
             " resultCode = " + resultCode + " data = " + data);
+    super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == ScreenShareHelper.REQUEST_MEDIA_PROJECTION &&
         resultCode == Activity.RESULT_OK) {
       LogUtil.i("InCallActivity.onActivityResult", "starting screen sharing");
       ScreenShareHelper.onPermissionChanged((Intent) data.clone());
       InCallPresenter.getInstance().notifyOutgoingVideoSourceChanged(
           ScreenShareHelper.SCREEN);
+    } else if (requestCode == QtiCallUtils.REQUEST_ADD_PARTICIPANT &&
+        resultCode == Activity.RESULT_OK) {
+        String numbers = data.getStringExtra(QtiCallUtils.EXTRA_ADD_PARTICIPANT_NUMBER);
+        DialerCall dialerCall = CallList.getInstance().getActiveOrBackgroundCall();
+        if (dialerCall != null) {
+            dialerCall.addConferenceParticipants(QtiCallUtils.getConferenceCallList(numbers));
+        } else {
+            LogUtil.i("InCallActivity.onActivityResult", "cannot perfrom add participant");
+        }
     }
   }
 

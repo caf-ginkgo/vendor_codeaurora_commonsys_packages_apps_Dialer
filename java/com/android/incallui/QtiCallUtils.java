@@ -36,9 +36,13 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
+import android.telecom.PhoneAccount;
+import android.telecom.PhoneAccountHandle;
+import android.telecom.TelecomManager;
 import android.telecom.Connection.VideoProvider;
 import android.telephony.CarrierConfigManager;
 import android.telephony.SubscriptionInfo;
@@ -52,6 +56,8 @@ import com.android.ims.ImsManager;
 import com.android.incallui.call.CallList;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.state.DialerCallState;
+import java.util.ArrayList;
+import java.util.List;
 import java.lang.reflect.*;
 import org.codeaurora.ims.QtiCallConstants;
 import org.codeaurora.ims.utils.QtiImsExtUtils;
@@ -64,6 +70,10 @@ public class QtiCallUtils {
     private static String LOG_TAG = "QtiCallUtils";
     //Maximum number of IMS phones in device.
     private static final int MAX_IMS_PHONE_COUNT = 2;
+    public static final int REQUEST_ADD_PARTICIPANT = 1000;
+    // ensure this extra is same the one defined in ConferenceURIDialer.java
+    public static final String EXTRA_ADD_PARTICIPANT_NUMBER =
+            "org.codeaurora.extra.ADD_PARTICIPANT_NUMBER";
 
     /**
      * Returns true if it is emergency number else false
@@ -105,6 +115,15 @@ public class QtiCallUtils {
             Log.w(context, "Context is null...");
         }
         return context != null && context.getResources().getBoolean(R.bool.video_call_use_ext);
+    }
+
+    public static List<Uri> getConferenceCallList(String num) {
+        List<Uri> numList = new ArrayList<>();
+        String[] splitNum = num.split(";");
+        for (String number : splitNum) {
+            numList.add(Uri.parse(number));
+        }
+        return numList;
     }
 
     /**
@@ -298,56 +317,28 @@ public class QtiCallUtils {
     }
 
    /**
-    * Show 4G Conference call menu option unless both SIMs are specific operators SIMs
-    * and both are not VoLTE/VT enabled.
+    * Show 4G Conference call menu option if phone account has adhoc conf capability.
     * @param context of the activity.
     * @return boolean whether should show 4G conference dialer menu option.
     */
     public static boolean show4gConferenceDialerMenuOption(Context context) {
-        if (!PermissionsUtil.hasPhonePermissions(context) || hasConferenceCall() ||
+        if (!PermissionsUtil.hasPhonePermissions(context) ||
                 !enforceReadPhoneState(context, "show4gConferenceDialerMenuOption")) {
             Log.i(LOG_TAG, "show4gConferenceDialerMenuOption no phone permissions");
             return false;
         }
-        Log.i(LOG_TAG, "inside show4gConferenceDialerMenuOption");
-        int unregisteredSpecificImsPhoneCount = 0;
-        TelephonyManager telephonyManager =
-                (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        CarrierConfigManager configManager =
-                (CarrierConfigManager) context.getSystemService(Context.CARRIER_CONFIG_SERVICE);
-        final int phoneCount = telephonyManager.getPhoneCount();
-        boolean isEnhanced4gLteModeSettingEnabled = false;
-        boolean isVolteEnabledByPlatform = false;
-        for (int i = 0; i < phoneCount; i++) {
-            final boolean isImsRegistered = isImsRegistered(context, i, telephonyManager);
-            Log.i(LOG_TAG, "phoneId = " + i + " isImsRegistered = " + isImsRegistered);
-            final boolean isCarrierConfigEnabled = QtiImsExtUtils.isCarrierConfigEnabled(i,
-                    context, "config_enable_conference_dialer");
 
-            if (isImsRegistered) {
+        TelecomManager telecomManager = context.getSystemService(TelecomManager.class);
+        for (PhoneAccountHandle accountHandle : telecomManager.getCallCapablePhoneAccounts()) {
+            PhoneAccount account = telecomManager.getPhoneAccount(accountHandle);
+            if (account != null &&
+                    account.hasCapabilities(PhoneAccount.CAPABILITY_ADHOC_CONFERENCE_CALLING)) {
+                Log.d(LOG_TAG, "show4gConferenceDialerMenuOption found" +
+                        " ahoc conf call phoneacc");
                 return true;
-            } else if (!isImsRegistered && isCarrierConfigEnabled) {
-                unregisteredSpecificImsPhoneCount++;
-            } else if (!isCarrierConfigEnabled) {
-                int subId = getSubId(context, i);
-                if (SubscriptionManager.isValidSubscriptionId(subId)) {
-                    ImsMmTelManager imsMmTelMgr = ImsMmTelManager.
-                            createForSubscriptionId(subId);
-                    isEnhanced4gLteModeSettingEnabled |=
-                            imsMmTelMgr.isAdvancedCallingSettingEnabled();
-                    if (configManager != null) {
-                        PersistableBundle b = configManager.getConfigForSubId(subId);
-                        if (b != null) {
-                            isVolteEnabledByPlatform |= b.getBoolean(
-                                    CarrierConfigManager.KEY_CARRIER_VOLTE_AVAILABLE_BOOL);
-                        }
-                    }
-                }
             }
         }
-        Log.i(LOG_TAG, "unregisteredSpecificImsPhoneCount = " + unregisteredSpecificImsPhoneCount);
-        return unregisteredSpecificImsPhoneCount < MAX_IMS_PHONE_COUNT &&
-                (isEnhanced4gLteModeSettingEnabled && isVolteEnabledByPlatform);
+        return false;
     }
 
    /**
@@ -482,7 +473,6 @@ public class QtiCallUtils {
     */
     public static Intent getAddParticipantsIntent() {
         Intent intent = new Intent("org.codeaurora.confuridialer.ACTION_LAUNCH_CONF_URI_DIALER");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("add_participant", true);
         return intent;
     }
@@ -493,7 +483,6 @@ public class QtiCallUtils {
     */
     public static Intent getAddParticipantsIntent(String number) {
         Intent intent = new Intent("org.codeaurora.confdialer.ACTION_LAUNCH_CONF_DIALER");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("add_participant", true);
         intent.putExtra("current_participant_list", number);
         return intent;

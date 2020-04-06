@@ -718,7 +718,7 @@ public class StatusBarNotifier
         resId = R.string.notification_incoming_spam_call;
       } else if (shouldShowEnrichedCallNotification(call.getEnrichedCallSession())) {
         resId = getECIncomingCallText(call.getEnrichedCallSession());
-      } else if (call.isIncomingConfCall()) {
+      } else if (call.isConferenceCall()) {
         resId = R.string.notification_incoming_conf_call;
       } else if (call.hasProperty(Details.PROPERTY_WIFI)) {
         resId = R.string.notification_incoming_call_wifi_template;

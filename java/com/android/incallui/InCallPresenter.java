@@ -1858,10 +1858,6 @@ public class InCallPresenter implements CallList.Listener, AudioModeProvider.Aud
           "InCallActivity is null. Can't set requested orientation.");
       return false;
     }
-    if (QtiCallUtils.hasVideoCrbtVtCall(context) || QtiCallUtils.hasVideoCrbtVoLteCall(context)) {
-      Log.d(this, "Unlike orientation change for color ring");
-      return false;
-    }
     inCallActivity.setRequestedOrientation(orientation);
     inCallActivity.enableInCallOrientationEventListener(
         orientation == InCallOrientationEventListener.ACTIVITY_PREFERENCE_ALLOW_ROTATION);

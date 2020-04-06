@@ -128,6 +128,7 @@ public class ImsVideoTech implements VideoTech {
   public void onCallStateChanged(
       Context context, int newState, PhoneAccountHandle phoneAccountHandle) {
     if (!isAvailable(context, phoneAccountHandle)) {
+      previousVideoState = call.getDetails().getVideoState();
       return;
     }
 

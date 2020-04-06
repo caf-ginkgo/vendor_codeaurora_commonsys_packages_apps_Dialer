@@ -120,12 +120,6 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
   public static final int CALL_HISTORY_STATUS_PRESENT = 1;
   public static final int CALL_HISTORY_STATUS_NOT_PRESENT = 2;
 
-  /**
-  * NOTE: Capability constant definition has been duplicated to avoid bundling the
-  * Dialer with Frameworks. DON"T chage it without changing the framework value.
-  */
-  public static final int CAPABILITY_ADD_PARTICIPANT = 0x02000000;
-
   // Hard coded property for {@code Call}. Upstreamed change from Motorola.
   // TODO(a bug): Move it to Telecom in framework.
   public static final int PROPERTY_CODEC_KNOWN = 0x04000000;
@@ -1356,20 +1350,16 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
         getCameraDir());
   }
 
-  public String toSimpleString() {
-    return super.toString();
+  public void addConferenceParticipants(List<Uri> participants) {
+      if (getState() == DialerCallState.ACTIVE || getState() == DialerCallState.ONHOLD) {
+          getTelecomCall().addConferenceParticipants(participants);
+      } else {
+          LogUtil.v("addConferenceParticipants", " call is neither in active or hold state");
+      }
   }
 
-  public boolean isIncomingConfCall() {
-    int callState = getState();
-    if (callState == DialerCallState.INCOMING || callState == DialerCallState.CALL_WAITING) {
-      Bundle extras = getExtras();
-      boolean incomingConf = (extras == null)? false :
-          extras.getBoolean(QtiImsExtUtils.QTI_IMS_INCOMING_CONF_EXTRA_KEY, false);
-      LogUtil.i("DialerCall", "isIncomingConfCall = " + incomingConf);
-      return incomingConf;
-    }
-    return false;
+  public String toSimpleString() {
+    return super.toString();
   }
 
   @CallHistoryStatus
