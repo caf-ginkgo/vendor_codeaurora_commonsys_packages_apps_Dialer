@@ -947,7 +947,7 @@ public class VideoCallPresenter
         isVideoMode(),
         VideoProfile.videoStateToString(currentVideoState),
         VideoProfile.videoStateToString(call.getVideoState()));
-    if (!hasVideoStateChanged) {
+    if (!hasVideoStateChanged && (shouldShowVideoUi == isVideoMode())) {
       return;
     }
 

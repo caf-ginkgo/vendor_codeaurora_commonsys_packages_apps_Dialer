@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -90,12 +90,6 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
 
    private QtiImsExtListenerBaseImpl imsInterfaceListener =
       new QtiImsExtListenerBaseImpl() {
-
-     /* Handles call transfer response */
-     @Override
-     public void receiveCallTransferResponse(int phoneId, int result) {
-          LogUtil.w("BottomSheetHelper.receiveCallTransferResponse", "result: " + result);
-     }
 
      /* Handles cancel call modify response */
      @Override
@@ -535,15 +529,15 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
      mCall.deflectCall(deflectCallNumberUri);
    }
 
-   private int getCallTransferCapabilities() {
-     Bundle extras = mCall.getExtras();
-     return (extras == null)? 0 :
-          extras.getInt(QtiImsExtUtils.QTI_IMS_TRANSFER_EXTRA_KEY, 0);
-   }
-
    private void maybeUpdateTransferInMap() {
+     final boolean showTransferOptions =
+         (mCall.can(android.telecom.Call.Details.CAPABILITY_TRANSFER) ||
+         mCall.can(android.telecom.Call.Details.CAPABILITY_TRANSFER_CONSULTATIVE)) &&
+         !mCall.hasReceivedVideoUpgradeRequest();
+     LogUtil.i("BottomSheetHelper.maybeUpdateTransferInMap",
+         "value of showTransferOptions in BottomSheetHelper = " + showTransferOptions);
      moreOptionsMap.put(mResources.getString(R.string.qti_description_transfer),
-         getCallTransferCapabilities() != 0 && !mCall.hasReceivedVideoUpgradeRequest());
+         showTransferOptions);
    }
 
    private void transferCall() {
@@ -584,12 +578,11 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
 
    private ArrayList<CharSequence> getCallTransferOptions() {
      final ArrayList<CharSequence> items = new ArrayList<CharSequence>();
-     final int transferCapabilities = getCallTransferCapabilities();
-     if ((transferCapabilities & QtiImsExtUtils.QTI_IMS_CONSULTATIVE_TRANSFER) != 0) {
+     if (mCall.can(android.telecom.Call.Details.CAPABILITY_TRANSFER_CONSULTATIVE)) {
        items.add(mResources.getText(R.string.qti_ims_onscreenBlindTransfer));
        items.add(mResources.getText(R.string.qti_ims_onscreenAssuredTransfer));
        items.add(mResources.getText(R.string.qti_ims_onscreenConsultativeTransfer));
-     } else if ((transferCapabilities & QtiImsExtUtils.QTI_IMS_BLIND_TRANSFER) != 0) {
+     } else if (mCall.can(android.telecom.Call.Details.CAPABILITY_TRANSFER)) {
        items.add(mResources.getText(R.string.qti_ims_onscreenBlindTransfer));
        items.add(mResources.getText(R.string.qti_ims_onscreenAssuredTransfer));
      }
@@ -599,38 +592,57 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
    private void onCallTransferItemClicked(int item) {
      switch(item) {
        case BLIND_TRANSFER:
-         callTransferClicked(QtiImsExtUtils.QTI_IMS_BLIND_TRANSFER);
+         transferCall(false);
          break;
        case ASSURED_TRANSFER:
-         callTransferClicked(QtiImsExtUtils.QTI_IMS_ASSURED_TRANSFER);
+         transferCall(true);
          break;
        case CONSULTATIVE_TRANSFER:
-         callTransferClicked(QtiImsExtUtils.QTI_IMS_CONSULTATIVE_TRANSFER);
+         transferCallConsultative();
          break;
        default:
          break;
      }
    }
 
-   private void callTransferClicked(int type) {
-     String number = QtiImsExtUtils.getCallDeflectNumber(mContext.getContentResolver());
+   //Called for blind and assured transfer
+   private void transferCall(boolean isConfirmationRequired) {
+     LogUtil.enterBlock("BottomSheetHelper.transferCall");
+     if(mCall == null ) {
+       LogUtil.w("BottomSheetHelper.transferCall", "mCall is null");
+       return;
+     }
+     String transferCallNumber = QtiImsExtUtils.getCallDeflectNumber(
+         mContext.getContentResolver());
+     /* If not set properly, inform via Log */
+     if (transferCallNumber == null) {
+       LogUtil.w("BottomSheetHelper.transferCall","transfer number error, number is null");
+       return;
+     }
+     Uri transferCallNumberUri = CallUtil.getCallUri(transferCallNumber);
+     if (transferCallNumberUri == null) {
+       LogUtil.w("BottomSheetHelper.transferCall", "transfer number Uri is null.");
+       return;
+     }
+     LogUtil.d("BottomSheetHelper.transferCall", "mCall:" + mCall +
+         "transferCallNumberUri: " + Log.pii(transferCallNumberUri));
+     mCall.transferCall(transferCallNumberUri, isConfirmationRequired);
+   }
+
+   //Called for consultative transfer
+   private void transferCallConsultative() {
+     LogUtil.enterBlock("BottomSheetHelper.transferCallConsultative");
+     if(mCall == null ) {
+       LogUtil.w("BottomSheetHelper.transferCallConsultative", "mCall is null");
+       return;
+     }
      //For Consultative transfer number is not needed
-     if (number == null && type != QtiImsExtUtils.QTI_IMS_CONSULTATIVE_TRANSFER) {
-       LogUtil.w("BottomSheetHelper.callTransferClicked", "transfer number error, number is null");
+     DialerCall backgroundCall = CallList.getInstance().getBackgroundCall();
+     if(backgroundCall == null) {
+       LogUtil.w("BottomSheetHelper.transferCallConsultative", "backgroundCall is null");
        return;
      }
-     if (mQtiImsExtManager == null) {
-       QtiCallUtils.displayToast(mContext, "An error occurred, Please try again later.");
-       return;
-     }
-     int phoneId = getPhoneId();
-     try {
-       LogUtil.d("BottomSheetHelper.sendCallTransferRequest", "Phoneid-" + phoneId + " type-"
-            + type + " number- " + number);
-       mQtiImsExtManager.sendCallTransferRequest(phoneId, type, number, imsInterfaceListener);
-     } catch (QtiImsException e) {
-       LogUtil.e("BottomSheetHelper.sendCallTransferRequest", "exception " + e);
-     }
+     mCall.transferCall(backgroundCall);
    }
 
    private void showDialpad() {

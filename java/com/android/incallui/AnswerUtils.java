@@ -46,7 +46,7 @@ public class AnswerUtils {
     }
     for (DialerCall currentCall : callList.getAllCalls()) {
       if (DialerCallState.isConnectingOrConnected(currentCall.getState()) &&
-          !currentCall.isIncoming()) {
+          !(currentCall.getState() == DialerCallState.INCOMING)) {
         currentCall.setReleasedByAnsweringSecondCall(true);
         currentCall.addListener(new AnswerOnDisconnected(currentCall, videoState));
         currentCall.disconnect();

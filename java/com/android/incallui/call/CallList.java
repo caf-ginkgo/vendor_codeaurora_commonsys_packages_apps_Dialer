@@ -488,7 +488,7 @@ public class CallList implements DialerCallDelegate {
 
   public boolean hasIncomingCallOnly() {
     for (DialerCall call : getAllCalls()) {
-      if (call.isIncoming()) continue;
+      if (call.getState() == DialerCallState.INCOMING) continue;
       if (call.getState() != DialerCallState.DISCONNECTED) {
         return false;
       }
