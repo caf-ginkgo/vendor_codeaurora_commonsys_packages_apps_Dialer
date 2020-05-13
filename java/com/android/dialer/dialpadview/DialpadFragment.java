@@ -1225,7 +1225,10 @@ public class DialpadFragment extends Fragment
         // Clear the digits just in case.
         clearDialpad();
       } else {
-        PreCall.start(getContext(), new CallIntentBuilder(number, CallInitiationType.Type.DIALPAD));
+        CallIntentBuilder builder = new CallIntentBuilder(number, CallInitiationType.Type.DIALPAD);
+        DialerUtils.maybeAddCallComposerExtras(getActivity().getContentResolver(),
+            builder.getInCallUiIntentExtras());
+        PreCall.start(getContext(), builder);
         hideAndClearDialpad();
       }
     }

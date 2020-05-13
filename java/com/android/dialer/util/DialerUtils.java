@@ -23,7 +23,10 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.SubscriptionInfo;
@@ -42,6 +45,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+
+import org.codeaurora.ims.CallComposerInfo;
+import org.codeaurora.ims.QtiCallConstants;
+import android.content.ContentResolver;
 
 /** General purpose utility methods for the Dialer. */
 public class DialerUtils {
@@ -303,5 +310,79 @@ public class DialerUtils {
         LOADER_ID_MAP.put(name, index);
         return index;
     }
+  }
+
+  /**
+   * Helper function which reads call composer data from Settings.Global and updates the bundle.
+   *
+   * Keys used to store/read call composer data to/from Settings.Global are defined in
+   * QtiCallConstants. This is temporary solution to enable testing of this feaure.
+   *
+   * @see QtiCallConstants#EXTRA_CALL_COMPOSER_*
+   *
+   */
+  public static Bundle maybeAddCallComposerExtras(@NonNull ContentResolver resolver,
+                                                             @NonNull Bundle extras) {
+
+    // Call composer data are parsed only when EXTRA_CALL_COMPOSER_INFO is present.
+    String shouldParseCallComposerData = Settings.Global.getString(resolver,
+                QtiCallConstants.EXTRA_CALL_COMPOSER_INFO);
+    if (shouldParseCallComposerData == null || shouldParseCallComposerData.isEmpty()) {
+        return extras;
+    }
+
+    // Update extras with call subjects.
+    String subject = Settings.Global.getString(resolver,
+                                QtiCallConstants.EXTRA_CALL_COMPOSER_SUBJECT);
+    extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_SUBJECT, subject);
+
+    // Update extras with image URI.
+    try {
+        String image = Settings.Global.getString(resolver,
+                                QtiCallConstants.EXTRA_CALL_COMPOSER_IMAGE);
+        if (image != null && !image.isEmpty()) {
+            extras.putParcelable(QtiCallConstants.EXTRA_CALL_COMPOSER_IMAGE, Uri.parse(image));
+        }
+    } catch (Exception e) {
+      LogUtil.e("DialerUtils.maybeAddCallComposerExtras", "Invalid image URI, Exception: " + e);
+    }
+
+    // Update extras with call priority.
+    try {
+      int priority = Settings.Global.getInt(resolver, QtiCallConstants.EXTRA_CALL_COMPOSER_PRIORITY,
+              CallComposerInfo.PRIORITY_NORMAL);
+      extras.putInt(QtiCallConstants.EXTRA_CALL_COMPOSER_PRIORITY, priority);
+    } catch (Exception e) {
+      LogUtil.e("DialerUtils.maybeAddCallComposerExtras", "Invalid call priority, Exception: " + e);
+    }
+
+    // Update extras with call location.
+    try {
+      String sLat = Settings.Global.getString(resolver,
+              QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LATITUDE);
+      String sLong = Settings.Global.getString(resolver,
+              QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LONGITUDE);
+      String sRadius = Settings.Global.getString(resolver,
+              QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS);
+      boolean isLocationInvalid = sLat == null || sLat.isEmpty()
+            || sLong == null || sLong.isEmpty()
+            || sRadius==null || sRadius.isEmpty();
+      if (!isLocationInvalid) {
+          extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LATITUDE,
+              Double.parseDouble(sLat));
+          extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LONGITUDE,
+              Double.parseDouble(sLong));
+          extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS,
+              Double.parseDouble(sRadius));
+          extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION, "");
+      }
+    } catch (Exception e) {
+      LogUtil.e("DialerUtils.maybeAddCallComposerExtras", "Invalid call location, Exception: " + e);
+    }
+
+    // Mark call compser data as valid.
+    extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_INFO, "");
+
+    return extras;
   }
 }

@@ -1037,7 +1037,7 @@ public class AnswerFragment extends Fragment
     LogUtil.i("AnswerFragment.acceptCallByUser", answerVideoAsAudio ? " answerVideoAsAudio" : "");
     if (!buttonAcceptClicked) {
       if (allowAnswerAndRelease()) {
-        performAnswerAndRelease(true);
+        performAnswerAndRelease(answerVideoAsAudio);
       } else {
         answerScreenDelegate.onAnswer(answerVideoAsAudio);
       }

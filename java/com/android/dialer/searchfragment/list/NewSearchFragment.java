@@ -557,11 +557,12 @@ public final class NewSearchFragment extends Fragment
             .setCharactersInSearchString(query == null ? 0 : query.length())
             .setAllowAssistedDialing(true)
             .build();
-    PreCall.start(
-        getContext(),
-        new CallIntentBuilder(phoneNumber, callSpecificAppData)
-            .setIsVideoCall(isVideoCall)
-            .setAllowAssistedDial(true));
+
+    CallIntentBuilder builder = new CallIntentBuilder(phoneNumber, callSpecificAppData);
+    builder.setIsVideoCall(isVideoCall).setAllowAssistedDial(true);
+    DialerUtils.maybeAddCallComposerExtras(getActivity().getContentResolver(),
+         builder.getInCallUiIntentExtras());
+    PreCall.start( getContext(), builder);
     FragmentUtils.getParentUnsafe(this, SearchFragmentListener.class).onCallPlacedFromSearch();
   }
 
