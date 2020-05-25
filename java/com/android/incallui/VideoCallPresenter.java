@@ -486,10 +486,11 @@ public class VideoCallPresenter
 
   /** Called when the user interface is ready to be used. */
   @Override
-  public void onVideoCallScreenUiReady() {
+  public void onVideoCallScreenUiReady(VideoCallScreen videoCallScreen) {
     LogUtil.v("VideoCallPresenter.onVideoCallScreenUiReady", "");
     Assert.checkState(!isVideoCallScreenUiReady);
 
+    this.videoCallScreen = videoCallScreen;
     deviceOrientation = InCallOrientationEventListener.getCurrentOrientation();
 
     // Register for call state changes last
@@ -562,6 +563,7 @@ public class VideoCallPresenter
     }
     InCallPresenter.getInstance().enableScreenTimeout(true);
 
+    videoCallScreen = null;
     isVideoCallScreenUiReady = false;
   }
 
@@ -874,6 +876,11 @@ public class VideoCallPresenter
     * setup virtual display.
     */
    private void startScreenShare() {
+     if (videoCallScreen == null) {
+       LogUtil.w("VideoCallPresenter.startScreenShare",
+           " VideoCallScreen is null");
+       return;
+     }
      DisplayMetrics metrics = new DisplayMetrics();
      Activity activity = videoCallScreen.getVideoCallScreenFragment().getActivity();
      if (activity == null) {
@@ -1619,6 +1626,12 @@ public class VideoCallPresenter
   }
 
   private void updateRemoteVideoSurfaceDimensions() {
+    if (videoCallScreen == null) {
+      LogUtil.i("VideoCallPresenter.updateRemoteVideoSurfaceDimensions",
+          "mVideoCallScreen is null");
+      return;
+    }
+
     Activity activity = videoCallScreen.getVideoCallScreenFragment().getActivity();
     if (activity != null) {
       Point screenSize = new Point();
@@ -1674,6 +1687,10 @@ public class VideoCallPresenter
 
   @Override
   public void onWiFiToLteHandover(DialerCall call) {
+    if (videoCallScreen == null) {
+      LogUtil.e("VideoCallPresenter.onWiFiToLteHandover", "no UI");
+      return;
+    }
     if (call.isVideoCall() || call.hasSentVideoUpgradeRequest()) {
       videoCallScreen.onHandoverFromWiFiToLte();
     }

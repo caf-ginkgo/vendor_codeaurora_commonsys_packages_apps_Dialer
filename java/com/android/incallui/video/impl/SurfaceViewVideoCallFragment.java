@@ -308,7 +308,7 @@ public class SurfaceViewVideoCallFragment extends Fragment
 
   @Override
   public void onVideoScreenStart() {
-    videoCallScreenDelegate.onVideoCallScreenUiReady();
+    videoCallScreenDelegate.onVideoCallScreenUiReady(this);
     getView().postDelayed(cameraPermissionDialogRunnable, CAMERA_PERMISSION_DIALOG_DELAY_IN_MILLIS);
   }
 
