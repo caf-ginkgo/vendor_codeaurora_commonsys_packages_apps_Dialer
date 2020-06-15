@@ -1199,6 +1199,8 @@ public class DialpadFragment extends Fragment
    * described above).
    */
   private void handleDialButtonPressed() {
+    LogUtil.enterBlock("DialpadFragment.handleDialButtonPressed");
+
     if (isDigitsEmpty()) { // No number entered.
       // No real call made, so treat it as a click
       PerformanceReport.recordClick(UiAction.Type.PRESS_CALL_BUTTON_WITHOUT_CALLING);

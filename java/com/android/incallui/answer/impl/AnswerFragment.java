@@ -241,8 +241,13 @@ public class AnswerFragment extends Fragment
 
   private void performAnswerAndRelease(boolean answerVideoAsAudio) {
     restoreAnswerAndReleaseButtonAnimation();
-    int videoState = answerVideoAsAudio ? VideoProfile.STATE_AUDIO_ONLY :
-        VideoProfile.STATE_BIDIRECTIONAL;
+    DialerCall call = QtiCallUtils.getIncomingCall();
+    if (call == null) {
+      LogUtil.e("AnswerFragment.performAnswerAndRelease", "IncomingCall == null");
+      return;
+    }
+
+    int videoState = answerVideoAsAudio ? VideoProfile.STATE_AUDIO_ONLY : call.getVideoState();
     answerScreenDelegate.onAnswerAndReleaseCall(videoState);
     buttonAcceptClicked = true;
   }

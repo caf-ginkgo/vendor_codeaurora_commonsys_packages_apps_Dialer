@@ -166,6 +166,7 @@ public class InCallActivity extends TransactionSafeFragmentActivity
   @DialpadRequestType private int showDialpadRequest = DIALPAD_REQUEST_NONE;
   private SpeakEasyCallManager speakEasyCallManager;
   private DialogFragment rttRequestDialogFragment;
+  private Toast errorToastPrompt;
 
   final Handler mSuplSvcToastShowHandler = new Handler();
   Set<String> mSuplSvcMessages = Collections.synchronizedSet(new HashSet<String>());
@@ -1045,9 +1046,15 @@ public class InCallActivity extends TransactionSafeFragmentActivity
 
     // Show a toast if the app is in background when a dialog can't be visible.
     if (!isVisible()) {
-      Toast.makeText(getApplicationContext(), disconnectMessage.toastMessage, Toast.LENGTH_LONG)
-          .show();
+      errorToastPrompt = Toast.makeText(getApplicationContext(),
+           disconnectMessage.toastMessage, Toast.LENGTH_LONG);
+      errorToastPrompt.show();
       return;
+    }
+
+    if (errorToastPrompt != null) {
+      errorToastPrompt.cancel();
+      errorToastPrompt = null;
     }
 
     // Show the dialog.

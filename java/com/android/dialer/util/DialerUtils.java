@@ -365,15 +365,16 @@ public class DialerUtils {
       String sRadius = Settings.Global.getString(resolver,
               QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS);
       boolean isLocationInvalid = sLat == null || sLat.isEmpty()
-            || sLong == null || sLong.isEmpty()
-            || sRadius==null || sRadius.isEmpty();
+            || sLong == null || sLong.isEmpty();
       if (!isLocationInvalid) {
           extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LATITUDE,
               Double.parseDouble(sLat));
           extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LONGITUDE,
               Double.parseDouble(sLong));
-          extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS,
-              Double.parseDouble(sRadius));
+          if (sRadius != null && !sRadius.isEmpty()) {
+            extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS,
+                Double.parseDouble(sRadius));
+          }
           extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION, "");
       }
     } catch (Exception e) {

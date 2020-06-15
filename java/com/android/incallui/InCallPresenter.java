@@ -278,6 +278,8 @@ public class InCallPresenter implements CallList.Listener, AudioModeProvider.Aud
   private boolean addCallClicked = false;
   private boolean automaticallyMutedByAddCall = false;
 
+  private Toast errorToast;
+
   /** Inaccessible constructor. Must use getRunningInstance() to get this singleton. */
   @VisibleForTesting
   InCallPresenter() {}
@@ -1496,12 +1498,17 @@ public class InCallPresenter implements CallList.Listener, AudioModeProvider.Aud
     }
 
     if (isActivityStarted()) {
+      if (errorToast != null) {
+        errorToast.cancel();
+        errorToast = null;
+      }
       inCallActivity.showDialogOrToastForDisconnectedCall(
           new DisconnectMessage(inCallActivity, call));
     } else {
       CharSequence message = new DisconnectMessage(context, call).toastMessage;
       if (message != null) {
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+        errorToast = Toast.makeText(context, message, Toast.LENGTH_LONG);
+        errorToast.show();
       }
     }
   }

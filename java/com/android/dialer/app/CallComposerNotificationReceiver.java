@@ -45,11 +45,23 @@ public class CallComposerNotificationReceiver extends BroadcastReceiver {
 
     private static final String LOG_TAG = "CallComposerNotificationReceiver";
 
+    // TODO: When receiving this intent, there are two actions that can be taken
+    //       depending on whether the call has ended or not
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         if (action.equals(QtiCallConstants.ACTION_CALL_COMPOSER_INFO)) {
             LogUtil.i(LOG_TAG, "onReceive: received call composer info notification");
+            boolean isCallEnded = intent.getBooleanExtra(
+                    QtiCallConstants.EXTRA_CALL_COMPOSER_CALL_ENDED, false);
+            LogUtil.d(LOG_TAG, "onReceive: call composer call ended? " + isCallEnded);
+            if (isCallEnded) {
+                // The call has ended and any necessary clean up can be initiated
+                // e.g. stop download, delete the image from the storage. etc
+                return;
+            }
+            // The call composer data is available. Authenticate, and download the image
+            // Then use the call composer info for the incoming call
             Bundle extras = intent.getBundleExtra(
                     QtiCallConstants.EXTRA_CALL_COMPOSER_INFO);
             LogUtil.d(LOG_TAG, "CallComposerInfo: " + toCallComposer(extras));

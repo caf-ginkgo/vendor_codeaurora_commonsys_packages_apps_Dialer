@@ -550,6 +550,8 @@ public final class NewSearchFragment extends Fragment
   }
 
   private void placeCall(String phoneNumber, int position, boolean isVideoCall) {
+    LogUtil.enterBlock("NewSearchFragment.placeCall");
+
     CallSpecificAppData callSpecificAppData =
         CallSpecificAppData.newBuilder()
             .setCallInitiationType(callInitiationType)

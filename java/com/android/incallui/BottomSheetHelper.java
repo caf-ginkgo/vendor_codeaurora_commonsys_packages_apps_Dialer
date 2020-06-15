@@ -697,8 +697,15 @@ public class BottomSheetHelper implements PrimaryCallTracker.PrimaryCallChangeLi
        LogUtil.e("BottomSheetHelper.startAddMultiParticipantActivity",
            "sendAddMultiParticipantsIntent, childCallIdList null.");
      }
+     final InCallActivity inCallActivity = InCallPresenter.getInstance().getActivity();
+     if (inCallActivity == null || !inCallActivity.isVisible()) {
+         LogUtil.w("BottomSheetHelper.startAddMultiParticipantActivity",
+             "In call activity is either null or not visible");
+         return;
+     }
      try {
-       mContext.startActivity(intent);
+       inCallActivity.startActivityForResult(intent,
+               QtiCallUtils.REQUEST_ADD_PARTICIPANT);
      } catch (ActivityNotFoundException e) {
        LogUtil.e("BottomSheetHelper.startAddMultiParticipantActivity",
            "Activity not found. Exception = " + e);

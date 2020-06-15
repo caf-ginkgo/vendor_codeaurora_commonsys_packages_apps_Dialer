@@ -519,6 +519,13 @@ public class VideoCallFragment extends Fragment
         .translationY(0)
         .setInterpolator(linearOutSlowInInterpolator)
         .alpha(1)
+        .withStartAction(
+            new Runnable() {
+              @Override
+              public void run() {
+                switchControls.setVisibility(View.VISIBLE);
+              }
+            })
         .start();
 
    // Animate onHold to the shown state.
@@ -694,6 +701,13 @@ public class VideoCallFragment extends Fragment
         .translationY(offset.y)
         .setInterpolator(fastOutLinearInInterpolator)
         .alpha(0)
+        .withEndAction(
+            new Runnable() {
+              @Override
+              public void run() {
+                controls.setVisibility(View.INVISIBLE);
+              }
+            })
         .start();
 
     offset = getControlsOffsetEndHidden(switchControls);
@@ -703,6 +717,13 @@ public class VideoCallFragment extends Fragment
         .translationY(offset.y)
         .setInterpolator(fastOutLinearInInterpolator)
         .alpha(0)
+        .withEndAction(
+            new Runnable() {
+              @Override
+              public void run() {
+                switchControls.setVisibility(View.INVISIBLE);
+              }
+            })
         .start();
 
     // Animate onHold to the hidden state.
