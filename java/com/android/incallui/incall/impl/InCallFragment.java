@@ -650,7 +650,10 @@ public class InCallFragment extends Fragment
       // Need to show or hide location
       showLocationUi(isInMultiWindowMode ? null : getLocationFragment());
     }
-    contactGridManager.onMultiWindowModeChanged(isInMultiWindowMode);
+    if (contactGridManager != null) {
+        // In case of activity relaunch, the onViewCreate isn't yet called.
+        contactGridManager.onMultiWindowModeChanged(isInMultiWindowMode);
+    }
   }
 
   private Fragment getLocationFragment() {

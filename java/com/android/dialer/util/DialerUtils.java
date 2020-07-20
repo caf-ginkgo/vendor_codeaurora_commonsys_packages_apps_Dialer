@@ -330,18 +330,18 @@ public class DialerUtils {
     if (shouldParseCallComposerData == null || shouldParseCallComposerData.isEmpty()) {
         return extras;
     }
-
+    Bundle b = new Bundle();
     // Update extras with call subjects.
     String subject = Settings.Global.getString(resolver,
                                 QtiCallConstants.EXTRA_CALL_COMPOSER_SUBJECT);
-    extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_SUBJECT, subject);
+    b.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_SUBJECT, subject);
 
     // Update extras with image URI.
     try {
         String image = Settings.Global.getString(resolver,
                                 QtiCallConstants.EXTRA_CALL_COMPOSER_IMAGE);
         if (image != null && !image.isEmpty()) {
-            extras.putParcelable(QtiCallConstants.EXTRA_CALL_COMPOSER_IMAGE, Uri.parse(image));
+            b.putParcelable(QtiCallConstants.EXTRA_CALL_COMPOSER_IMAGE, Uri.parse(image));
         }
     } catch (Exception e) {
       LogUtil.e("DialerUtils.maybeAddCallComposerExtras", "Invalid image URI, Exception: " + e);
@@ -351,7 +351,7 @@ public class DialerUtils {
     try {
       int priority = Settings.Global.getInt(resolver, QtiCallConstants.EXTRA_CALL_COMPOSER_PRIORITY,
               CallComposerInfo.PRIORITY_NORMAL);
-      extras.putInt(QtiCallConstants.EXTRA_CALL_COMPOSER_PRIORITY, priority);
+      b.putInt(QtiCallConstants.EXTRA_CALL_COMPOSER_PRIORITY, priority);
     } catch (Exception e) {
       LogUtil.e("DialerUtils.maybeAddCallComposerExtras", "Invalid call priority, Exception: " + e);
     }
@@ -367,22 +367,22 @@ public class DialerUtils {
       boolean isLocationInvalid = sLat == null || sLat.isEmpty()
             || sLong == null || sLong.isEmpty();
       if (!isLocationInvalid) {
-          extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LATITUDE,
+          b.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LATITUDE,
               Double.parseDouble(sLat));
-          extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LONGITUDE,
+          b.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_LONGITUDE,
               Double.parseDouble(sLong));
           if (sRadius != null && !sRadius.isEmpty()) {
-            extras.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS,
-                Double.parseDouble(sRadius));
+            b.putDouble(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION_RADIUS,
+              Double.parseDouble(sRadius));
           }
-          extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION, "");
+          b.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_LOCATION, "");
       }
     } catch (Exception e) {
       LogUtil.e("DialerUtils.maybeAddCallComposerExtras", "Invalid call location, Exception: " + e);
     }
 
     // Mark call compser data as valid.
-    extras.putString(QtiCallConstants.EXTRA_CALL_COMPOSER_INFO, "");
+    extras.putBundle(QtiCallConstants.EXTRA_CALL_COMPOSER_INFO, b);
 
     return extras;
   }
