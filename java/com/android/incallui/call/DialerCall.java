@@ -182,6 +182,9 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
   @Nullable private SpamStatus spamStatus;
   private boolean isBlocked;
 
+  // boolean flag to check if call has already been rejected
+  private boolean isRejected = false;
+
   private boolean didShowCameraPermission;
   private boolean didDismissVideoChargesAlertDialog;
   private PersistableBundle carrierConfig;
@@ -421,6 +424,7 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
     this.telecomCall = telecomCall;
     this.latencyReport = latencyReport;
     id = ID_PREFIX + Integer.toString(idCounter++);
+    isRejected = false;
 
     // Must be after assigning mTelecomCall
     videoTechManager = new VideoTechManager(this);
@@ -1585,7 +1589,12 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
 
   public void reject(boolean rejectWithMessage, String message) {
     LogUtil.i("DialerCall.reject", "");
+    isRejected = true;
     telecomCall.reject(rejectWithMessage, message);
+  }
+
+  public boolean isRejected() {
+    return isRejected;
   }
 
   /** Return the string label to represent the call provider */

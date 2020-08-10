@@ -245,8 +245,8 @@ public class StatusBarNotifier
     LogUtil.d("StatusBarNotifier.updateInCallNotification", "");
 
     final DialerCall call = getCallToShow(CallList.getInstance());
-
-    if (call != null) {
+    // don't show Notification, if call has already been rejected
+    if (call != null && !call.isRejected()) {
       showNotification(call);
     } else {
       cancelNotification();
