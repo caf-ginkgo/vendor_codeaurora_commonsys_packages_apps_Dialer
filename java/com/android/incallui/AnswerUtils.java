@@ -39,6 +39,7 @@ public class AnswerUtils {
   private AnswerUtils() {}
 
   public static void disconnectAllAndAnswer(int videoState) {
+    boolean isCallAvailableToDisconnect = false;
     CallList callList = InCallPresenter.getInstance().getCallList();
     if (callList == null || callList.getIncomingCall() == null) {
       LogUtil.i("AnswerUtils.diconnectAllAndAnswer", "no valid call found");
@@ -47,10 +48,21 @@ public class AnswerUtils {
     for (DialerCall currentCall : callList.getAllCalls()) {
       if (DialerCallState.isConnectingOrConnected(currentCall.getState()) &&
           !(currentCall.getState() == DialerCallState.INCOMING)) {
+        isCallAvailableToDisconnect = true;
         currentCall.setReleasedByAnsweringSecondCall(true);
         currentCall.addListener(new AnswerOnDisconnected(currentCall, videoState));
         currentCall.disconnect();
       }
+    }
+
+    /* On successfully disconnecting the current calls, MT call will be answered
+     * {@link AnswerOnDisconnected.onDialerCallDisconnect.
+     * If there are no calls to disconnect then answer MT call immediately.
+     */
+    if (!isCallAvailableToDisconnect) {
+      LogUtil.i("AnswerUtils.diconnectAllAndAnswer", "There are no calls to release," +
+          " answer incoming call");
+      callList.getIncomingCall().answer(videoState);
     }
   }
 
