@@ -245,7 +245,6 @@ public class ImsVideoTech implements VideoTech {
     LogUtil.enterBlock("ImsVideoTech.declineUpgradeRequest");
     call.getVideoCall()
         .sendSessionModifyResponse(new VideoProfile(call.getDetails().getVideoState()));
-    setSessionModificationState(SessionModificationState.NO_REQUEST);
     logger.logImpression(DialerImpression.Type.IMS_VIDEO_REQUEST_DECLINED);
   }
 

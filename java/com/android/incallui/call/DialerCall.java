@@ -1302,7 +1302,8 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
   public boolean answeringDisconnectsOtherCall() {
     Bundle extras = getExtras();
     if (extras == null
-        || !extras.containsKey(CallCompat.Details.EXTRA_ANSWERING_DROPS_FOREGROUND_CALL)) {
+        || !extras.containsKey(CallCompat.Details.EXTRA_ANSWERING_DROPS_FOREGROUND_CALL) ||
+        hasReceivedVideoUpgradeRequest()) {
       return false;
     }
     return extras.getBoolean(CallCompat.Details.EXTRA_ANSWERING_DROPS_FOREGROUND_CALL);

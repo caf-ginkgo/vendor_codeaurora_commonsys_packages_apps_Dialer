@@ -51,7 +51,10 @@ public class AnswerUtils {
         isCallAvailableToDisconnect = true;
         currentCall.setReleasedByAnsweringSecondCall(true);
         currentCall.addListener(new AnswerOnDisconnected(currentCall, videoState));
-        currentCall.disconnect();
+        if (currentCall.getParentId() == null) {
+          //Send disconnect only for parent calls and not for child calls.
+          currentCall.disconnect();
+        }
       }
     }
 
