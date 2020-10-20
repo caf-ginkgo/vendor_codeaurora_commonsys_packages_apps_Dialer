@@ -537,7 +537,8 @@ public class CallButtonPresenter
             && !call.isVoiceMailNumber()
             && DialerCallState.isDialing(call.getState())
             // Most devices cannot make calls on 2 SIMs at the same time.
-            && InCallPresenter.getInstance().getCallList().getAllCalls().size() == 1;
+            && InCallPresenter.getInstance().getCallList().getAllCalls().size() == 1
+            && !call.isConferenceCall();
 
     boolean showUpgradeToRtt = call.canUpgradeToRttCall();
     boolean enableUpgradeToRtt = showUpgradeToRtt && call.getState() == DialerCallState.ACTIVE;
